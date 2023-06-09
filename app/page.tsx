@@ -1,27 +1,71 @@
 'use client';
-import useDownloader from 'react-use-downloader';
 
-export default function Home() {
-  const { size, elapsed, percentage, download, cancel, error, isInProgress } =
-    useDownloader();
+import Image from 'next/image';
+import Link from 'next/link';
+import { open } from '@tauri-apps/api/shell';
 
-  const fileUrl =
-    'https://upload.wikimedia.org/wikipedia/commons/4/4d/%D0%93%D0%BE%D0%B2%D0%B5%D1%80%D0%BB%D0%B0_%D1%96_%D0%9F%D0%B5%D1%82%D1%80%D0%BE%D1%81_%D0%B2_%D0%BF%D1%80%D0%BE%D0%BC%D1%96%D0%BD%D1%8F%D1%85_%D0%B2%D1%80%D0%B0%D0%BD%D1%96%D1%88%D0%BD%D1%8C%D0%BE%D0%B3%D0%BE_%D1%81%D0%BE%D0%BD%D1%86%D1%8F.jpg';
-  const filename = 'beautiful-carpathia.jpg';
+import { getGames } from '@/services';
+
+import Metamask from '@/components/metamask/Metamask';
+import Web3Authentication from '@/components/web3auth/Web3Auth';
+import Auth0 from '@/components/Auth0/Auth0';
+import WebView from '@/components/webView/WebView';
+import WalletConnect from '@/components/walletConnect/WalletConnect';
+import { configureChains, createConfig, WagmiConfig } from 'wagmi';
+import { arbitrum, mainnet, polygon } from 'wagmi/chains';
+
+import {
+  EthereumClient,
+  w3mConnectors,
+  w3mProvider
+} from '@web3modal/ethereum';
+import { Web3Modal, Web3Button } from '@web3modal/react';
+
+const chains = [arbitrum, mainnet, polygon];
+const projectId = '3ce2912cb5cc3a4cbb77f57f812aa533';
+
+const { publicClient } = configureChains(chains, [w3mProvider({ projectId })]);
+const wagmiConfig = createConfig({
+  autoConnect: true,
+  connectors: w3mConnectors({ projectId, version: 1, chains }),
+  publicClient
+});
+const ethereumClient = new EthereumClient(wagmiConfig, chains);
+
+const HomePage = async () => {
+  // const games = await getGames();
+  const extId = 'nkbihfbeogaeaoehlefnkodbefgpgknn';
+  console.log('da2');
 
   return (
-    <main className='flex min-h-screen flex-col items-center justify-between p-24'>
-      <h1>Testing App</h1>
-      <p>Download is in {isInProgress ? 'in progress' : 'stopped'}</p>
-      <button onClick={() => download(fileUrl, filename)}>
-        Click to download the file
-      </button>
-      <button onClick={() => cancel()}>Cancel the download</button>
-      <p>Download size in bytes {size}</p>
-      <label htmlFor='file'>Downloading progress:</label>
-      <progress id='file' value={percentage} max='100' />
-      <p>Elapsed time in seconds {elapsed}</p>
-      {error && <p>possible error {JSON.stringify(error)}</p>}
-    </main>
+    <div className='container mx-auto px-4 py-8 flex flex-wrap relative z-0 items-center'>
+      {/* <Metamask /> */}
+      {/* <WebView /> */}
+      <WagmiConfig config={wagmiConfig}>
+        <WalletConnect />
+      </WagmiConfig>
+      <Web3Modal projectId={projectId} ethereumClient={ethereumClient} />
+      {/* <Web3Authentication /> */}
+      {/* <Auth0 /> */}
+      {/* {games.results.map((game: any) => (
+        <div className='w-full sm:w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/5 flex flex-col mb-6'>
+          <Link href={`/details/${game.id}`}>
+            <div className='w-48 h-64 relative'>
+              <Image
+                src={game.background_image}
+                alt={game.name}
+                fill
+                className='rounded-lg'
+              />
+            </div>
+            <h2 className='mt-2 text-lg font-medium text-gray-800'>
+              {game.name}
+            </h2>
+          </Link>
+        </div>
+      ))} */}
+    </div>
   );
-}
+};
+
+export default HomePage;
